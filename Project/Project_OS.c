@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
         }
         else if(S_ISLNK(a.st_mode)){
             printf("%s is a symbolic link file\n",argv[i+1]);
-            printf("Symbolicc link:\n name(-n)\n delete symbolic link(-l)\n size of symbolic link(-d)\n size of target file(-t)\n access rights(-a)\n");
+            printf("Symbolic link:\n name(-n)\n delete symbolic link(-l)\n size of symbolic link(-d)\n size of target file(-t)\n access rights(-a)\n");
         }
         else if(S_ISDIR(a.st_mode)){
             printf("%s is a directory\n",argv[i+1]);
