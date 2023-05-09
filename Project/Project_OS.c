@@ -99,11 +99,11 @@ int main(int argc, char *argv[]){
     struct stat a;
     char c;
     for(int i=0;i<argc-1;i++){
-        if(stat(argv[i],&a)==-1){
-            perror(argv[i]);
+        if(lstat(argv[i+1],&a)==-1){
+            perror(argv[i+1]);
             continue;
         }
-        if(S_ISREG(a.st_mode)){
+        if(S_ISREG(a.st_mode)==1){
             struct stat file;
             char link_name[32];
             lstat(argv[i+1],&file);
@@ -127,10 +127,10 @@ int main(int argc, char *argv[]){
                           symlink(argv[i+1],link_name);
                           printf("The symbolic link %s is created",link_name);
                           break;
-                default:printf("Not a regular file\n");break;
+                default:fflush(stdin);printf("Not a regular file\n");break;
             }
         }
-        else if(S_ISLNK(a.st_mode)){
+        else if(S_ISLNK(a.st_mode)==1){
             struct stat file;
             lstat(argv[i+1],&file);
             printf("%s is a symbolic link file\n",argv[i+1]);
@@ -149,11 +149,11 @@ int main(int argc, char *argv[]){
                 default:printf("Not a symbolic link file\n");break;
             }
         }
-        else if(S_ISDIR(a.st_mode)){
+        else if(S_ISDIR(a.st_mode)==1){
             struct stat file;
             lstat(argv[i+1],&file);
             printf("%s is a directory\n",argv[i+1]);
-            printf("Directory:\n name(-n)\n size(-d)\n access rights(-a)\n total number of file with the .c extension(-c)");
+            printf("Directory:\n name(-n)\n size(-d)\n access rights(-a)\n total number of file with the .c extension(-c)\n");
             scanf("%c",&c);
             if(c=='-'){
                 scanf("%c",&c);
