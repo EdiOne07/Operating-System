@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <time.h>
+#include <string.h>
 void access_rights(struct stat file){
     printf("User:\n");
     if(file.st_mode & S_IRUSR){
@@ -75,6 +76,25 @@ void link_file_size(char* file){
     lstat(arr,&x);
     printf("The symbolic link size of file %s is %ld\n",file,x.st_size);
 }
+void count_c_files(char* name){
+    DIR* dir;
+    struct dirent* readv;
+    int k=0;
+    int length=0;
+    dir=opendir(name);
+    if(dir!=NULL){
+        while((readv=readdir(dir))!=NULL){
+            length=strlen(readv->d_name);
+            if(strcmp(readv->d_name+length-2,".c")==0){
+                k++;
+            }
+        }
+        closedir(dir);
+    }else{
+        printf("Couldn't open directory");
+    }
+    printf("The total number of C file is %d:\n",k);
+}
 int main(int argc, char *argv[]){
     struct stat a;
     char c;
@@ -104,18 +124,47 @@ int main(int argc, char *argv[]){
                           break;
                 case 'l': printf("Input the file name for the symbolic link\n");
                           scanf("%s",link_name);
-                          symlink(argv[i],link_name);
+                          symlink(argv[i+1],link_name);
                           printf("The symbolic link %s is created",link_name);
                           break;
+                default:printf("Not a regular file\n");break;
             }
         }
         else if(S_ISLNK(a.st_mode)){
+            struct stat file;
+            lstat(argv[i+1],&file);
             printf("%s is a symbolic link file\n",argv[i+1]);
             printf("Symbolic link:\n name(-n)\n delete symbolic link(-l)\n size of symbolic link(-d)\n size of target file(-t)\n access rights(-a)\n");
+            scanf("%c",&c);
+            if(c=='-'){
+                scanf("%c",&c);
+            }
+            switch(c){
+                case 'n': link_file_name(argv[i+1]); break;
+                case 'l': unlink(argv[i+1]);
+                          printf("The link was deleted\n");break;
+                case 'd': printf("The size of the link file is %ld\n",file.st_size);break;
+                case 't': link_file_size(argv[i+1]);break;
+                case 'a': access_rights(file);break;
+                default:printf("Not a symbolic link file\n");break;
+            }
         }
         else if(S_ISDIR(a.st_mode)){
+            struct stat file;
+            lstat(argv[i+1],&file);
             printf("%s is a directory\n",argv[i+1]);
             printf("Directory:\n name(-n)\n size(-d)\n access rights(-a)\n total number of file with the .c extension(-c)");
+            scanf("%c",&c);
+            if(c=='-'){
+                scanf("%c",&c);
+            }
+            switch(c){
+                case 'n': printf("The directory name is %s:\n",argv[i+1]);break;
+                case 'd': printf("Size of directory is %ld:\n",file.st_size);break;
+                case 'a': access_rights(file);break;
+                case 'c': count_c_files(argv[i+1]);break;
+                default:printf("Not a directory\n");break;
+            }
         }
         else{
             printf("File given as argument is not a good input\n");
