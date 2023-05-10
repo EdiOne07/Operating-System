@@ -182,19 +182,21 @@ int main(int argc, char *argv[]){
         }
         exit(0);
     }
-    /*process=fork();
+    process=fork();
     if(process<0){
         perror("Couldn't open process");
         exit(1);
     }
     else if(process==0){
-        //if(.c file)
+        int length_for_c=strlen(argv[i]);
+        if(strcmp(argv[i]+length_for_c-2,".c")==0){
             execlp("./script name","./script name",argv[i],NULL);
-    }*/
-    else{
+        }
+    }
+   /* else{
         int status;
         wait(&status);
-    }
+    }*/
   }
    return 0;
 }
