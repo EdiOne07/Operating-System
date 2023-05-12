@@ -97,10 +97,35 @@ void count_c_files(char* name){
     }
     printf("The total number of C file is %d:\n",k);
 }
+void score(char* argv,int errors, int warnings){
+    double score=0;
+    if(errors & warnings){
+        score=10;
+    }
+    else if(errors>0){
+        score=1;
+    }
+    else if(errors==0 && warnings>10){
+        score=2;
+    }
+    else if(errors==0 && warnings<=10){
+        score=2+8*(10-warnings)/10;
+    }
+    FILE* fo = fopen("grades.txt", "a");
+    if(!fo) {
+        perror("Could not open file");
+        exit(1);
+    }
+    fprintf(fo,"%s:%.2f\n",argv, score);
+    fclose(fo);
+
+}
 int main(int argc, char *argv[]){
     struct stat a;
     pid_t process;
+    pid_t process2;
     char c;
+    int warnings,errors;
     if(argc<=1){
         printf("Invalid input");
         exit(0);
@@ -117,7 +142,7 @@ int main(int argc, char *argv[]){
         if(S_ISREG(a.st_mode)==1){
             struct stat file;
             char link_name[32];
-            lstat(argv[i+1],&file);
+            lstat(argv[i],&file);
             struct tm* timer=localtime(&file.st_mtime);
             printf("%s is a regular file\n", argv[i]);
             printf("Regular file:\n name(-n)\n size(-d)\n hard link count(-h)\n time of last modification(-m)\n access rights(-a)\n create symbolic link(-l)\n");
@@ -182,21 +207,52 @@ int main(int argc, char *argv[]){
         }
         exit(0);
     }
-    process=fork();
-    if(process<0){
+    if(S_ISREG(a.st_mode)){
+        int pfd[2];//0=write, 1=read
+        if(pipe(pfd)==-1){
+            perror("Couldn't make pipe");
+            exit(2);
+        }
+        process2=fork();
+        if(process2<0){
         perror("Couldn't open process");
         exit(1);
     }
-    else if(process==0){
+    else if(process2==0){
+        close(pfd[0]);
         int length_for_c=strlen(argv[i]);
         if(strcmp(argv[i]+length_for_c-2,".c")==0){
-            execlp("./script name","./script name",argv[i],NULL);
+            dup2(pfd[1],1);
+            execlp("bash","bash",argv[i],NULL);
+            close(pfd[1]);
+            
         }
+        else{
+            execlp("wc","wc","-l",argv[i],NULL);
+            exit(0);
+        }
+        exit(0);
     }
-   /* else{
+    else{
+        int length_for_c=strlen(argv[i]);
+        close(pfd[1]);
+        FILE *f=fdopen(pfd[0],"r");
+        if(!f){
+            perror("Error opening the file");
+            exit(3);
+        }
+        fscanf(f,"%d",&errors);
+        fscanf(f,"%d",&warnings);
+        close(pfd[0]);
+        if(strcmp(argv[i]+length_for_c-2,".c")==0){
+            score(argv[i],warnings,errors);
+        }
         int status;
         wait(&status);
-    }*/
+        wait(&status);
+     }
+    }
+    
   }
    return 0;
 }
